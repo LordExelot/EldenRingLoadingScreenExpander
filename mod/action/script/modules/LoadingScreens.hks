@@ -1,0 +1,254 @@
+-------------------------------------------------------------------
+-- Main Table
+-------------------------------------------------------------------
+local LoadingScreensInfo = {
+    -- Vanilla
+    [1]  = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Third Church of Marika
+    [2]  = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: View of the Erdtree
+    [3]  = { weight = 10, requiredEventFlag = 0 },           -- Stormveil: Throneroom Statue of Godfrey
+    [4]  = { weight = 10, requiredEventFlag = 0 },           -- Farum Azula: Maliketh Bossroom
+    [5]  = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Divine Tower of Limgrave
+    [6]  = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Nomadic Merchant
+    [7]  = { weight = 10, requiredEventFlag = 0 },           -- Raya Lucaria: Debate Parlor
+    [8]  = { weight = 10, requiredEventFlag = 0 },           -- Mountaintop of the Giants: Giant's Corpse
+    [9]  = { weight = 10, requiredEventFlag = 0 },           -- Roundtable Hold: The Round Table
+    [10] = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Ruins with a Stake of Marika
+    [11] = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Blaidd
+    [12] = { weight = 10, requiredEventFlag = 0 },           -- Mt. Gelmir: Abductor Virgins
+    [13] = { weight = 10, requiredEventFlag = 0 },           -- Leyndell, Royal Capital: The Queens Bedchamber
+    [14] = { weight = 10, requiredEventFlag = 0 },           -- Weeping Peninsula: Walking Mausoleum
+    [15] = { weight = 10, requiredEventFlag = 0 },           -- Redmane Caste: Castalian Jerren
+    [16] = { weight = 10, requiredEventFlag = 0 },           -- Liurnia: Wraithcaller Rider
+    [17] = { weight = 10, requiredEventFlag = 0 },           -- Stormveil: Main Gate
+    [18] = { weight = 10, requiredEventFlag = 0 },           -- Jarburg: Living Jars
+    [19] = { weight = 10, requiredEventFlag = 0 },           -- Nokstella: Giant Skeleton
+    [20] = { weight = 10, requiredEventFlag = 0 },           -- Volcano Manor: Lady Tanith
+    [21] = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Caravan
+    [22] = { weight = 10, requiredEventFlag = 0 },           -- Limgrave: Guardian Golem
+    [23] = { weight = 10, requiredEventFlag = 0 },           -- Catacombs: Erdtree Roots
+    [24] = { weight = 10, requiredEventFlag = 0 },           -- Abyssal Woods: Midra's Manse
+    [25] = { weight = 10, requiredEventFlag = 0 },           -- Belurat: Main Gate
+    [26] = { weight = 10, requiredEventFlag = 0 },           -- Cathedral of Manus Metyr: Emyr's Throne
+    [27] = { weight = 10, requiredEventFlag = 0 },           -- Jagged Peak: Jagged Peak Drake
+    [28] = { weight = 10, requiredEventFlag = 0 },           -- Ruins of Rauh: Pond
+    [29] = { weight = 10, requiredEventFlag = 0 },           -- Black Keep: Burning Boats
+    [30] = { weight = 10, requiredEventFlag = 0 },           -- Gravesite Plains: View of the Scadutree
+    [31] = { weight = 10, requiredEventFlag = 0 },           -- Midra's Manse: Family Portrait
+    [32] = { weight = 10, requiredEventFlag = 0 },           -- Scadu Altus: Furnace Golem
+    [33] = { weight = 10, requiredEventFlag = 0 },           -- Cerulean Coast: Spirit Eel
+    [34] = { weight = 10, requiredEventFlag = 0 },           -- Gravesite Plains: Miquella's Cross
+    -- Modded
+    -- [35] = { weight = 99, requiredEventFlag = 0 },          -- NAME HERE
+}
+
+-------------------------------------------------------------------------
+-- Included Requirements
+-- Only for HKS Nerds
+-------------------------------------------------------------------------
+
+local TraversePointerChain = 10000
+local WritePointerChain = 10000
+local ExposeDebugPrint = 10001
+local GetEventFlag = 10003
+local UNSIGNED_SHORT = 2
+local UNSIGNED_INT = 4
+local GAME_BASE = 0
+local CHR_INS_BASE = 1
+local CS_NOW_LOADING_HELPER = 0x3D60EC8 -- 1.16
+local WORLD_CHR_MAN = 0x3D65F88 -- 1.16
+local LOCAL_PLAYER_OFFSET = 0x1E508 -- 1.16
+local CURRENT_MENU_LOAD_INDEX = 0xD0
+local CHR_HANDLE = 0x8
+
+function MENU_LOAD_ENTRIES(index)
+    return 0x48 + (index * 0x4)
+end
+
+function AttachAfter(Function, Addition)
+    local oldFunction = Function
+    return function(...)
+        local result = oldFunction(...)
+        Addition(...)
+        return result
+    end
+end
+
+local _isLocalPlayer = nil
+function IsLocalPlayer()
+    if _isLocalPlayer == true then
+        return TRUE
+    elseif _isLocalPlayer == false then
+        return FALSE
+    end
+
+    if env(IsCOMPlayer) == FALSE and SelfHandleAsParts() == LocalPlayerHandleAsParts() then
+        _isLocalPlayer = true
+        return TRUE
+    end
+    _isLocalPlayer = false
+    return FALSE
+end
+
+function SelfHandleAsParts()
+    local a = env(TraversePointerChain, CHR_INS_BASE, UNSIGNED_SHORT, CHR_HANDLE + 0x0)
+    local b = env(TraversePointerChain, CHR_INS_BASE, UNSIGNED_SHORT, CHR_HANDLE + 0x2)
+    local c = env(TraversePointerChain, CHR_INS_BASE, UNSIGNED_SHORT, CHR_HANDLE + 0x4)
+    local d = env(TraversePointerChain, CHR_INS_BASE, UNSIGNED_SHORT, CHR_HANDLE + 0x6)
+    return a, b, c, d
+end
+
+function LocalPlayerHandleAsParts()
+    local a = env(TraversePointerChain, GAME_BASE, UNSIGNED_SHORT, WORLD_CHR_MAN, LOCAL_PLAYER_OFFSET, CHR_HANDLE + 0x0)
+    local b = env(TraversePointerChain, GAME_BASE, UNSIGNED_SHORT, WORLD_CHR_MAN, LOCAL_PLAYER_OFFSET, CHR_HANDLE + 0x2)
+    local c = env(TraversePointerChain, GAME_BASE, UNSIGNED_SHORT, WORLD_CHR_MAN, LOCAL_PLAYER_OFFSET, CHR_HANDLE + 0x4)
+    local d = env(TraversePointerChain, GAME_BASE, UNSIGNED_SHORT, WORLD_CHR_MAN, LOCAL_PLAYER_OFFSET, CHR_HANDLE + 0x6)
+    return a, b, c, d
+end
+
+-------------------------------------------------------------------
+-- Actual Code
+-------------------------------------------------------------------
+local LoadingScreensPopulated = false
+function LoadingScreenHandler()
+    if not IsLocalPlayer() then
+        return
+    elseif LoadingScreensPopulated then
+        MonitorLoadingScreenEventFlags()
+        return
+    end
+    LoadingScreensPopulated = true
+
+    if env(TraversePointerChain, GAME_BASE, UNSIGNED_INT, CS_NOW_LOADING_HELPER, CURRENT_MENU_LOAD_INDEX) ~= 1 then
+        LimitLoadingScreenAmountHandler()
+        return
+    end
+
+    PopulateLoadingScreens()
+end
+
+function PopulateLoadingScreens()
+    local currentLoadingScreenTable = GetCurrentLoadingScreenTable()
+    -- Get the last 5 played loading screens
+    -- First loading screen on startup is on index 1
+    -- In Lua, indices start at 1 instead of 0, meaning in this table we include index 2
+    local lastFiveOld = {
+        currentLoadingScreenTable[31],
+        currentLoadingScreenTable[32],
+        currentLoadingScreenTable[33],
+        currentLoadingScreenTable[1],
+        currentLoadingScreenTable[2]
+    }
+
+    local availableIndices = {}
+    for index, info in pairs(LoadingScreensInfo) do
+        if info.weight > 0 and (info.requiredEventFlag <= 0 or env(GetEventFlag, info.requiredEventFlag) == TRUE) then
+            table.insert(availableIndices, index)
+        end
+    end
+
+    if #availableIndices == 0 then
+        act(ExposeDebugPrint, "[WARNING!] Not enough available loading screens to populate table. At least 1 need to be possible. Loading screens were not updated.")
+        return
+    end
+
+    local used = {}
+    for i = 0, 33 do
+        -- Neccessary evil for making it so high weight loading screens dont get placed in index 0 or index 1
+        -- If not the weight based priority system has no use because the high weight items will be at an index that
+        -- require a full rotation before they show up.
+        local index = i + 2
+        if index > 33 then
+            index = index - 34
+        end
+
+        local candidates = {}
+        for _, idx in ipairs(availableIndices) do
+            if not used[idx] then -- Exclude already added loading screens
+                if i > 4 or Contains(lastFiveOld, idx) == FALSE then -- For first 5, exclude lastFiveOld
+                    table.insert(candidates, idx)
+                end
+            end
+        end
+
+        local selectedIdx = 0
+        if #candidates ~= 0 then
+            -- Calculating total weight
+            local totalWeight = 0
+            for _, idx in ipairs(candidates) do
+                totalWeight = totalWeight + LoadingScreensInfo[idx].weight
+            end
+            -- Weighted random selection
+            local rand = math.random() * totalWeight
+            local cumulative = 0
+            for _, idx in ipairs(candidates) do
+                cumulative = cumulative + LoadingScreensInfo[idx].weight
+                if rand <= cumulative then
+                    selectedIdx = idx
+                    break
+                end
+            end
+            
+            used[selectedIdx] = true
+        end
+
+        act(WritePointerChain, GAME_BASE, UNSIGNED_INT, selectedIdx,  CS_NOW_LOADING_HELPER, MENU_LOAD_ENTRIES(index))
+    end
+end
+
+function GetCurrentLoadingScreenTable()
+    local _table = {}
+    for i = 0, 33, 1 do
+        table.insert(_table, env(TraversePointerChain, GAME_BASE, UNSIGNED_INT, CS_NOW_LOADING_HELPER, MENU_LOAD_ENTRIES(i)))
+    end
+    return _table
+end
+
+local monitoredFlags = nil
+function MonitorLoadingScreenEventFlags()
+    -- Collect all loading screens with requiredEventFlag > 0 and currently false
+    if monitoredFlags == nil then
+        monitoredFlags = {}
+        for index, info in pairs(LoadingScreensInfo) do
+            if info.requiredEventFlag > 0 and env(GetEventFlag, info.requiredEventFlag) ~= TRUE then
+                monitoredFlags[info.requiredEventFlag] = index
+            end
+        end
+    elseif next(monitoredFlags) == nil then
+        return
+    end
+
+    -- Monitoring loop (call this function periodically, e.g., every frame or on event update)
+    for flag, index in pairs(monitoredFlags) do
+        if env(GetEventFlag, flag) == TRUE then
+            local nextMenuLoadIndex = env(TraversePointerChain, GAME_BASE, UNSIGNED_INT, CS_NOW_LOADING_HELPER, CURRENT_MENU_LOAD_INDEX) + 1
+            if nextMenuLoadIndex > 33 then
+                nextMenuLoadIndex = 0
+            end
+
+            act(WritePointerChain, GAME_BASE, UNSIGNED_INT, index, CS_NOW_LOADING_HELPER, MENU_LOAD_ENTRIES(nextMenuLoadIndex))
+            monitoredFlags[flag] = nil
+        end
+    end
+end
+
+local nextLoadingScreen = 0
+function LimitLoadingScreenAmountHandler()
+    if nextLoadingScreen ~= 0 then
+        return
+    end
+
+    local currentTable = GetCurrentLoadingScreenTable()
+    local currentIndex = env(TraversePointerChain, GAME_BASE, UNSIGNED_INT, CS_NOW_LOADING_HELPER, CURRENT_MENU_LOAD_INDEX) -- Range 0 - 33
+    local _nextLoadingScreen = currentTable[currentIndex + 2] -- Not +1 because lua starts it's table index at 1
+
+    if _nextLoadingScreen ~= 0 then
+        nextLoadingScreen = _nextLoadingScreen
+        return
+    end
+
+    act(WritePointerChain, GAME_BASE, UNSIGNED_INT, 1, CS_NOW_LOADING_HELPER, CURRENT_MENU_LOAD_INDEX)
+    PopulateLoadingScreens() -- Since index will be reset to 1
+    nextLoadingScreen = currentTable[1]
+end
+
+Update = AttachAfter(Update, LoadingScreenHandler)
